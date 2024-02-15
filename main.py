@@ -1,6 +1,9 @@
 from threading import Thread
 from modules import dataHandler
+from modules import codes
 from time import sleep as wait
+
+# I hate formatting code
 
 print('''
     Hello, welcome to cash clickers v2 which is a more... Polished version of the game.
@@ -14,6 +17,7 @@ userData = {
     'shop': {
         'price1': 50
     },
+    'redeemedCodes': [],
 }
 
 # Load data if there is any
@@ -26,28 +30,28 @@ def clear():
 
 def saveUserData():
     while True:
-        wait(60)
+        wait(10)
         dataHandler.saveGame(userData)
 
-saveThread = Thread(target=saveUserData)
+saveThread = Thread(target=saveUserData, daemon=True)
 saveThread.start()
 
 # Main game loop
 while True:
-    print(f'You have ${userData['cash']}')
-    userInput = input('Would you like to:\n(ENTER) - Get cash\n(PRESS 1) - Open shop\n(s) - save game\n(q) - quit game\n')
+    print(f'You have ${round(userData['cash'], 2)}')
+    userInput = input('Would you like to:\n(ENTER) - Get Cash\n(shop) - Open Shop\n(save) - save the game\n(code) - to redeem a code\n(quit) - quit the game (saves before you do)\n')
 
     if userInput == '':
         userData['cash'] += 1 * userData['cashMulti']
         clear()
     
-    elif userInput == '1':
+    elif userInput.lower() == 'shop':
         isUserDone = False
         while not isUserDone:
             clear()
-            userBought = input(f'You have ${userData['cash']}\nWhat would you like to buy?:\n(1) - +1 Multiplier = $50\n(q) - Leave shop\n')
+            userBought = input(f'You have ${userData['cash']}\nWhat would you like to buy?:\n(1) - +1 Multiplier = ${userData['shop']['price1']}\n(leave) - Leave shop\n')
 
-            if userBought == 'q':
+            if userBought.lower() == 'leave':
                 print('Goodbye!')
                 isUserDone = True
                 clear()
@@ -57,23 +61,27 @@ while True:
                 clear()
                 if userData['cash'] >= userData['shop']['price1']:
                     userData['cash'] -= userData['shop']['price1']
+                    userData['shop']['price1'] = round(userData['shop']['price1'] * 1.5, 2)
                     userData['cashMulti'] += 1
                     print("Succesfully bought +1 Multiplier")
-                    wait(1)
+                    wait(0.4)
                 else:
                     clear()
                     print("You dont have enough money... BROKIE LMAOO")
-                    wait(1)
+                    wait(0.5)
     
-    elif userInput == "s":
+    elif userInput.lower() == "save":
         clear()
         print("Saving...")
         dataHandler.saveGame(userData)
 
-    elif userInput == "q":
+    elif userInput.lower() == "code":
+        userData['cash'] += codes.codeScreen(userData['redeemedCodes'])
+
+    elif userInput.lower() == "quit":
         clear()
-        print("Goodbye!")
         dataHandler.saveGame(userData)
         break
 
-saveThread.join()
+print("Goodbye!")
+quit()
